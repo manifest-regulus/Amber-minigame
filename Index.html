@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amber Shaper Minigame</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #f0f0f0;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #ffa500;
+    }
+    #cast-bar, #energy-bar, #control-bar {
+      width: 300px;
+      height: 30px;
+      margin: 10px auto;
+      background: #333;
+      border: 1px solid #555;
+      position: relative;
+    }
+    .fill {
+      height: 100%;
+      background: #ffa500;
+    }
+    #energy-fill { background: #00ffff; }
+    #control-fill { background: #ff3366; }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    #log {
+      margin-top: 20px;
+      height: 100px;
+      overflow-y: auto;
+      border-top: 1px solid #555;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Amber Shaper Practice</h1>
+
+  <div>Amber Explosion Cast Bar</div>
+  <div id="cast-bar"><div class="fill" id="cast-fill"></div></div>
+
+  <div>Energy</div>
+  <div id="energy-bar"><div class="fill" id="energy-fill"></div></div>
+
+  <div>Loss of Control</div>
+  <div id="control-bar"><div class="fill" id="control-fill"></div></div>
+
+  <button onclick="amberStrike()">Amber Strike (Interrupt)</button>
+  <button onclick="consumeAmber()">Consume Amber (+30 Energy)</button>
+  <button onclick="struggleControl()">Struggle for Control</button>
+
+  <div id="log"></div>
+
+  <script>
+    let energy = 100;
+    let control = 0;
+    let casting = false;
+    let castProgress = 0;
+    let castInterval = null;
+
+    function updateBars() {
+      document.getElementById('energy-fill').style.width = energy + '%';
+      document.getElementById('control-fill').style.width = control + '%';
+    }
+
+    function log(msg) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + logDiv.innerHTML;
+    }
+
+    function startCast() {
+      if (casting) return;
+      casting = true;
+      castProgress = 0;
+      document.getElementById('cast-fill').style.width = '0%';
+      castInterval = setInterval(() => {
+        castProgress += 5;
+        document.getElementById('cast-fill').style.width = castProgress + '%';
+        if (castProgress >= 100) {
+          clearInterval(castInterval);
+          casting = false;
+          log('Amber Explosion went off! You wiped.');
+          alert('Game Over: You failed to interrupt!');
+          resetGame();
+        }
+      }, 200);
+    }
+
+    function amberStrike() {
+      if (!casting) {
+        log('Nothing to interrupt.');
+        return;
+      }
+      if (energy < 30) {
+        log('Not enough energy to interrupt!');
+        return;
+      }
+      clearInterval(castInterval);
+      casting = false;
+      castProgress = 0;
+      energy -= 30;
+      document.getElementById('cast-fill').style.width = '0%';
+      log('Amber Strike successful! Interrupted.');
+      updateBars();
+      setTimeout(startCast, Math.random() * 5000 + 3000);
+    }
+
+    function consumeAmber() {
+      energy = Math.min(100, energy + 30);
+      log('Consumed Amber! +30 energy.');
+      updateBars();
+    }
+
+    function struggleControl() {
+      if (control < 60) {
+        log('No need to struggle yet.');
+        return;
+      }
+      if (energy < 20) {
+        log('Not enough energy to struggle!');
+        return;
+      }
+      energy -= 20;
+      control = 0;
+      log('Struggled free from control!');
+      updateBars();
+    }
+
+    function increaseControl() {
+      control += 1;
+      if (control >= 100) {
+        log('You lost control and wiped!');
+        alert('Game Over: You lost control.');
+        resetGame();
+      }
+      updateBars();
+    }
+
+    function resetGame() {
+      clearInterval(castInterval);
+      energy = 100;
+      control = 0;
+      casting = false;
+      document.getElementById('cast-fill').style.width = '0%';
+      updateBars();
+      setTimeout(startCast, 3000);
+    }
+
+    // Game loop
+    setInterval(increaseControl, 1000);
+    updateBars();
+    setTimeout(startCast, 2000);
+  </script>
+</body>
+</html>
